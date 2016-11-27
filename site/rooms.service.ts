@@ -1,6 +1,7 @@
 /// <reference path="../node_modules/@types/socket.io-client/index.d.ts" />
 import * as io from 'socket.io-client';
 import { Injectable } from '@angular/core';
+import { Http } from '@angular/http';
 import { UUID } from 'angular2-uuid';
 
 @Injectable()
@@ -9,8 +10,12 @@ export class RoomsService {
     private userName:string = 'Valero';
     private uuid:string;
     private socket;
+    private playingStatus:boolean = false;
+
+    private myPos;
 
     private roomsList = [];
+    private playersList = [];
 
     constructor(){
         this.socket = io(this.url);
@@ -34,22 +39,39 @@ export class RoomsService {
             });
         });
 
+        this.socket.on('join-succesful', oData => {
+
+        });
+
         this.socket.emit('register', {
             name: this.userName,
             uuid: this.uuid
         });
     }
 
+    setCurrentPos(newPos){
+        this.myPos = newPos;
+    }
+
+    getCurrentPos(){
+        return this.myPos;
+    }
+
     getRoomsList() {
         return this.roomsList;
     }
 
-    createRoom(oLoc){
+    createRoom(){
         this.socket.emit('createRoom', {
             name: 'Test',
-            lat: oLoc.lat,
-            lng: oLoc.lng
+            lat: this.myPos.lat,
+            lng: this.myPos.lng
         })
+    }
+
+    joinRoom(uuid){
+        this.playingStatus = true;
+        this.socket.emit('joinRoom', uuid);
     }
 
     register(userName){

@@ -51,6 +51,16 @@ app.get('/', function(req, res) {
         env: env
     });
 });
+app.get('/sala-de-espera', function(req, res) {
+    res.render('index.ejs', {
+        env: env
+    });
+});
+app.get('/juego', function(req, res) {
+    res.render('index.ejs', {
+        env: env
+    });
+});
 
 io.on('connection', function (socket) {
     var ownUuid = null;
@@ -80,7 +90,7 @@ io.on('connection', function (socket) {
             inCoffee: false
         };
 
-        roomGameMdl.find().then(function(aRooms){
+        roomGameMdl.find().then(aRooms => {
             var aParsed = [];
 
             aRooms.forEach(oRoom => {

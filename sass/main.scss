@@ -9,3 +9,19 @@ h1{
   height: 300px;
   text-align: center;
 }
+
+.roomItem{
+  padding: 13px;
+  background-color: #b0fbce;
+  border: 1px solid #4cf991;
+  cursor: pointer;
+  margin-bottom: 3px;
+}
+
+.createRoomBtn{
+  margin-top:25px;
+  padding: 13px;
+  background-color: #1ff378;
+  border: 1px solid #4cf991;
+  cursor: pointer;
+}
