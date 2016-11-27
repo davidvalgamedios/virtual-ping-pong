@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>VirtualPingPong</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!-- Configure SystemJS-->
+
+    <link href="/dist/css/virtual-pong.css" type="text/css" rel="stylesheet">
+</head>
+<!-- 3. Display the application -->
+<body>
+<virtual-ping-pong>Loading...</virtual-ping-pong>
+
+
+<script src="/node_modules/zone.js/dist/zone.js"></script>
+<script src="/node_modules/reflect-metadata/Reflect.js"></script>
+
+<% if (env == 'dev') { %>
+
+<script src="/node_modules/systemjs/dist/system.src.js"></script>
+<script>
+    System.import('/dist/systemjs.config.js').then(function () {
+        System.import('build');
+    }).catch(console.error.bind(console));
+</script>
+
+<% } else{ %>
+
+<script src="/dist/js/site-all.js"></script>
+<% } %>
+</body>
+</html>
