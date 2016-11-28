@@ -121,9 +121,6 @@ io.on('connection', function (socket) {
                 });
             }
             delete(oActiveUsers[ownUuid]);
-            /*socket.broadcast.emit('userDisconnected', {
-                uuid: ownUuid
-            });*/
         }
     });
 
@@ -186,13 +183,18 @@ io.on('connection', function (socket) {
         let nGameId = oActiveUsers[ownUuid].inRoom;
         if(nGameId && oActiveRooms.hasOwnProperty(nGameId)){
             let aPlayers = JSON.parse(JSON.stringify(oActiveRooms[nGameId].players));
-            let nIndex = aPlayers.indexOf(ownUuid);
-            if(nIndex != -1){
-                aPlayers.splice(nIndex, 1);
+            if(aPlayers.length == 1){
+                socket.emit('ball-received');
             }
-            let nRandom = randomInt(0, aPlayers.length-1);
-            let oPlayer = oActiveUsers[aPlayers[nRandom]];
-            oPlayer.socket.emit('ball-received');
+            else{
+                let nIndex = aPlayers.indexOf(ownUuid);
+                if(nIndex != -1){
+                    aPlayers.splice(nIndex, 1);
+                }
+                let nRandom = randomInt(0, aPlayers.length-1);
+                let oPlayer = oActiveUsers[aPlayers[nRandom]];
+                oPlayer.socket.emit('ball-received');
+            }
         }
     })
 });
