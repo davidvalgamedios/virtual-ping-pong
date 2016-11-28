@@ -1,4 +1,3 @@
 build
 typings
-dist/*
 !dist/systemjs.config.js
