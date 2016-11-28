@@ -19,8 +19,6 @@ var rename = require('gulp-rename');
 
 const paths = {
     vendorJs: [
-        "node_modules/zone.js/dist/zone.js",
-        "node_modules/reflect-metadata/Reflect.js",
         "build/full-build.js"
     ],
     sass:[

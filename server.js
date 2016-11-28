@@ -21,7 +21,7 @@ mongoose.connect('mongodb://localhost:27017/VirtualPingPong');
 var roomGameMdl = require('./server/Schemas/RoomSchema.js');
 
 
-const env = 'dev';
+const env = 'prod';
 
 var oActiveRooms = {};
 /*
