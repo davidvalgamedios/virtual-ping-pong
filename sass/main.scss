@@ -25,3 +25,22 @@ h1{
   border: 1px solid #4cf991;
   cursor: pointer;
 }
+
+.startGameBtn{
+  margin-top:25px;
+  padding: 13px;
+  background-color: #f3a521;
+  border: 1px solid #c88916;
+  cursor: pointer;
+}
+
+.ball{
+  width: 80%;
+  padding-bottom: 80%;
+  background: #ff8700;
+  margin-left: 10%;
+  border-radius: 50%;
+  -webkit-box-shadow: 25px 25px 106px 1px rgba(0,0,0,0.57);
+  -moz-box-shadow: 25px 25px 106px 1px rgba(0,0,0,0.57);
+  box-shadow: 25px 25px 106px 1px rgba(0,0,0,0.57);
+}

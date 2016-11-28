@@ -10,6 +10,7 @@ import {ActivatedRoute, Params, Router}   from '@angular/router';
             {{sPlayerUuid}}
         </div>
         
+        <div (click)="startGame()" class="startGameBtn">Empezar juego</div>
         <div (click)="returnToRoomsList()" class="createRoomBtn">Volver</div>
     `,
     providers:[RoomsService]
@@ -38,5 +39,9 @@ export class WaitingRoomComponent implements OnInit{
 
     getRoomData(sDataId){
         return this.roomsService.getRoomData(sDataId);
+    }
+
+    startGame(){
+        this.roomsService.startGame()
     }
 }

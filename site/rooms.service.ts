@@ -4,9 +4,11 @@ import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { UUID } from 'angular2-uuid';
 import 'rxjs/add/operator/toPromise';
+import {Router} from "@angular/router";
 
 @Injectable()
 export class RoomsService {
+    static instance: RoomsService;
     private socketUrl = '/';
     private userName:string = 'Valero';
     private myUuid:string;
@@ -16,9 +18,13 @@ export class RoomsService {
 
     private roomsList = [];
     private actualRoomData = {};
+    private actualRoomId = null;
     private playersList = [];
 
-    constructor(private http:Http){
+    private playerHasBall:boolean = false;
+
+
+    constructor(private http:Http, private router: Router){
         let savedUuid = localStorage.getItem('savedUuid');
         if(savedUuid){
             this.myUuid = savedUuid;
@@ -40,34 +46,7 @@ export class RoomsService {
         };
         this.updateNearRooms();
 
-        /*this.http.post('/api/register', {
-            name: this.userName,
-            uuid: this.uuid
-        }).toPromise()
-            .then(res => {
-
-            });
-
-        this.socket = io(this.socketUrl);
-        this.socket.on('rooms-list', oData => {
-            oData.forEach(oRoom => {
-                this.roomsList.push({
-                    lat: oRoom.lat,
-                    lng: oRoom.lng,
-                    name: oRoom.name,
-                    uuid: oRoom.uuid
-                });
-            });
-        });
-
-        this.socket.on('join-succesful', oData => {
-
-        });
-
-        this.socket.emit('register', {
-            name: this.userName,
-            uuid: this.uuid
-        });*/
+        return RoomsService.instance = RoomsService.instance || this;
     }
 
     getCurrentPos(){
@@ -106,6 +85,7 @@ export class RoomsService {
     }
 
     joinRoom(uuid){
+        this.actualRoomId = uuid;
         this.playersList = [];
         this.roomsList.forEach(oRoom => {
             if(oRoom.uuid == uuid){
@@ -131,12 +111,27 @@ export class RoomsService {
             }
         });
 
-        this.socket.on('player-connected', sPlayerId =>{
+        this.socket.on('player-connected', sPlayerId => {
             let nIndex = this.playersList.indexOf(sPlayerId);
             if(nIndex == -1){
                 this.playersList.push(sPlayerId);
             }
         });
+
+        this.socket.on('game-started', nothing => {
+            this.router.navigate(['/juego', this.actualRoomId]);
+        });
+
+        this.socket.on('ball-received', nothing => {
+            this.playerHasBall = true;
+        });
+    }
+
+    kickBall(){
+        if(this.socket){
+            this.socket.emit('kick-ball');
+            this.playerHasBall = false;
+        }
     }
 
     getRoomData(sDataId){
@@ -145,51 +140,13 @@ export class RoomsService {
         }
     }
 
-    register(userName){
-        /*this.userName = userName;
+    hasBall():boolean{
+        return this.playerHasBall;
+    }
 
-        this.socket = io(this.url);
-        this.socket.emit('register', this.userName);
-
-        this.socket.on('statusChanged', (data) => {
-            let count = this.roomsList.length;
-
-            for(var i = 0;i<count;i++){
-                if(this.roomsList[i].getData('uuid') == data.uuid){
-                    this.roomsList[i].setStatus(data.inCoffee);
-                    if(data.inCoffee){
-                    }
-                    return;
-                }
-            }
-        });
-
-        this.socket.on('registerOk', (data) => {
-            for(var sUuid in data.connectedUsers){
-                let oUser = data.connectedUsers[sUuid];
-
-                //this.roomsList.push(new User(sUuid, oUser.name, oUser.inCoffee));
-            }
-        });
-
-
-        this.socket.on('newUser', (data) => {
-            //this.roomsList.push(new User(data.uuid, data.name, data.inCoffee));
-        });
-
-        this.socket.on('userDisconnected', (data) => {
-            let count = this.roomsList.length;
-
-            for(var i = 0;i<count;i++){
-                if(this.roomsList[i].getData('uuid') == data.uuid){
-                    this.roomsList.splice(i, 1);
-                    return;
-                }
-            }
-        });
-
-        this.socket.on('msgBroadcast', (data) => {
-            //new Notification(data.userName+' dice', {icon:'/dist/img/coffee.jpg',body: data.msg})
-        });*/
+    startGame(){
+        if(this.playersList.length > 1 || true){
+            this.socket.emit('startGame');
+        }
     }
 }

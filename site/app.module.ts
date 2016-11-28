@@ -8,6 +8,7 @@ import { AppComponent }     from './app.component';
 import { AgmCoreModule } from 'angular2-google-maps/core';
 import {GameLocationComponent} from "./game-location.component";
 import {WaitingRoomComponent} from "./waiting-room.component";
+import {PlayingGameComponent} from "./playing-game.component";
 
 
 @NgModule({
@@ -28,8 +29,8 @@ import {WaitingRoomComponent} from "./waiting-room.component";
                 component: WaitingRoomComponent
             },
             {
-                path: 'juego',
-                component: GameLocationComponent
+                path: 'juego/:uuid',
+                component: PlayingGameComponent
             },
             {
                 path: '',
@@ -38,7 +39,7 @@ import {WaitingRoomComponent} from "./waiting-room.component";
             }
         ])
     ],
-    declarations: [ AppComponent, GameLocationComponent, WaitingRoomComponent],
+    declarations: [ AppComponent, GameLocationComponent, WaitingRoomComponent, PlayingGameComponent],
     bootstrap:    [ AppComponent ]
 })
 export class AppModule {}

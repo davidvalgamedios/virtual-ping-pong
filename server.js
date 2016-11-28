@@ -63,7 +63,7 @@ app.get('/sala-de-espera/*', function(req, res) {
         env: env
     });
 });
-app.get('/juego', function(req, res) {
+app.get('/juego/*', function(req, res) {
     res.render('index.ejs', {
         env: env
     });
@@ -149,7 +149,8 @@ io.on('connection', function (socket) {
                 if(mRoom != null){
                     oActiveRooms[oData.roomUuid] = {
                         name: mRoom.name,
-                        players: [oData.myUuid]
+                        players: [oData.myUuid],
+                        isPlaying: false
                     };
 
                     socket.emit('full-players-list', oActiveRooms[oData.roomUuid].players);
@@ -157,8 +158,43 @@ io.on('connection', function (socket) {
             })
         }
     });
+
+    socket.on('startGame', function(){
+        let nGameId = oActiveUsers[ownUuid].inRoom;
+        if(nGameId){
+            let oRoom = oActiveRooms[nGameId];
+            oRoom.isPlaying = true;
+
+            oRoom.players.forEach(sPlayerId => {
+                if(oActiveUsers.hasOwnProperty(sPlayerId) && oActiveUsers[sPlayerId].inRoom == nGameId){
+                    let oSocket = oActiveUsers[sPlayerId].socket;
+
+                    oSocket.emit('game-started');
+                }
+            });
+        }
+    });
+
+    socket.on('kick-ball', function(){
+        let nGameId = oActiveUsers[ownUuid].inRoom;
+        if(nGameId && oActiveRooms.hasOwnProperty(nGameId)){
+            let aPlayers = JSON.parse(JSON.stringify(oActiveRooms[nGameId].players));
+            let nIndex = aPlayers.indexOf(ownUuid);
+            if(nIndex != -1){
+                aPlayers.splice(nIndex, 1);
+            }
+            let nRandom = randomInt(0, aPlayers.length-1);
+            let oPlayer = oActiveUsers[aPlayers[nRandom]];
+            oPlayer.socket.emit('ball-received');
+        }
+    })
 });
 
 server.listen(port);
 console.log("Listening on: "+port);
 io.set("origins", "*:*");
+
+
+function randomInt(bottom, top) {
+    return Math.floor( Math.random() * ( 1 + top - bottom ) ) + bottom;
+}
