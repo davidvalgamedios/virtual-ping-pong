@@ -13,7 +13,9 @@ import {Router} from "@angular/router";
 export class PlayingGameComponent {
 
     constructor(private roomsService: RoomsService, private router: Router){
-
+        window.addEventListener('shake', nothing => {
+            this.kickBall();
+        }, false);
     }
 
     hasBall():boolean{
@@ -21,6 +23,8 @@ export class PlayingGameComponent {
     }
 
     kickBall(){
-        this.roomsService.kickBall();
+        if(this.hasBall()){
+            this.roomsService.kickBall();
+        }
     }
 }

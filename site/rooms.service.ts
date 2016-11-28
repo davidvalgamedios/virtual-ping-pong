@@ -123,6 +123,7 @@ export class RoomsService {
         });
 
         this.socket.on('ball-received', nothing => {
+            navigator.vibrate(500);
             this.playerHasBall = true;
         });
     }

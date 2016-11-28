@@ -172,6 +172,7 @@ io.on('connection', function (socket) {
                     oSocket.emit('game-started');
                 }
             });
+            socket.emit('ball-received');
         }
     });
 

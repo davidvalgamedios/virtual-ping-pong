@@ -17,9 +17,7 @@ export class AppComponent {
             timeout: 1000 // optional, determines the frequency of event generation
         });
         myShakeEvent.start();
-        window.addEventListener('shake', function(){
-            navigator.vibrate(1000);
-        }, false);
+
     }
 
 }
