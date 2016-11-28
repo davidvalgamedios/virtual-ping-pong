@@ -4,6 +4,7 @@ const port = 8000;
 
 var https = require('https');
 var fs = require('fs');
+var bodyParser   = require('body-parser');
 
 const httpsOptions = {
     key: fs.readFileSync('./certs/9015629-icarvs.dev.key'),
@@ -22,14 +23,14 @@ var roomGameMdl = require('./server/Schemas/RoomSchema.js');
 
 const env = 'dev';
 
-var oRooms = {};
+var oActiveRooms = {};
 /*
 uuid:{
     name:'asdasd',
 
 }
 */
-var oUsers = {};
+var oActiveUsers = {};
 /*
 uuid: {
     name:asdfasdf,
@@ -41,6 +42,7 @@ uuid: {
 // routes ======================================================================
 app.set('view engine', 'ejs');
 app.use("/dist", express.static(__dirname + '/dist'));
+app.use(bodyParser()); // get information from html forms
 
 app.use("/node_modules", express.static(__dirname + '/node_modules'));
 app.use("/build", express.static(__dirname + '/build'));
@@ -51,7 +53,12 @@ app.get('/', function(req, res) {
         env: env
     });
 });
-app.get('/sala-de-espera', function(req, res) {
+app.get('/lugar', function(req, res) {
+    res.render('index.ejs', {
+        env: env
+    });
+});
+app.get('/sala-de-espera/*', function(req, res) {
     res.render('index.ejs', {
         env: env
     });
@@ -62,15 +69,46 @@ app.get('/juego', function(req, res) {
     });
 });
 
+app.post('/api/getRooms', function(req, res){
+    //console.log(req.body.lat);
+    //console.log(req.body.lng);
+    roomGameMdl.find().then(aRooms => {
+        let aParsed = [];
+
+        aRooms.forEach(oRoom => {
+            aParsed.push({
+                name: oRoom.name,
+                lat: oRoom.lat,
+                lng: oRoom.lng,
+                uuid: oRoom.uuid
+            })
+        });
+        res.send(aParsed);
+    });
+});
+
 io.on('connection', function (socket) {
     var ownUuid = null;
 
     socket.on('disconnect', function(){
-        if(ownUuid){
-            delete(oUsers[ownUuid]);
-            socket.broadcast.emit('userDisconnected', {
+        if(ownUuid && oActiveUsers.hasOwnProperty(ownUuid)){
+            if(oActiveUsers[ownUuid].inRoom){
+                let room = oActiveRooms[oActiveUsers[ownUuid].inRoom];
+                let nIndex = room.players.indexOf(ownUuid);
+                if(nIndex != -1){
+                    room.players.splice(nIndex, 1);
+                }
+                room.players.forEach(sPlayerId => {
+                    if(oActiveUsers.hasOwnProperty(sPlayerId)){
+                        let oSocket = oActiveUsers[sPlayerId].socket;
+                        oSocket.emit('player-disconnected', ownUuid)
+                    }
+                });
+            }
+            delete(oActiveUsers[ownUuid]);
+            /*socket.broadcast.emit('userDisconnected', {
                 uuid: ownUuid
-            });
+            });*/
         }
     });
 
@@ -83,47 +121,42 @@ io.on('connection', function (socket) {
         newRoom.save();
     });
 
-    socket.on('register', function(oData){
-        ownUuid = oData.uuid;
-        oUsers[oData.uuid] = {
-            name: oData.name,
-            inCoffee: false
+    socket.on('joinRoom', function(oData){
+        ownUuid = oData.myUuid;
+        oActiveUsers[oData.myUuid] = {
+            name: oData.myName,
+            socket: socket,
+            inRoom: oData.roomUuid
         };
 
-        roomGameMdl.find().then(aRooms => {
-            var aParsed = [];
+        if(oActiveRooms.hasOwnProperty(oData.roomUuid)){
+            let oRoomPlayers = oActiveRooms[oData.roomUuid].players;
+            if(oRoomPlayers.indexOf(ownUuid) == -1){
+                oRoomPlayers.push(oData.myUuid);
+            }
+            socket.emit('full-players-list', oRoomPlayers);
 
-            aRooms.forEach(oRoom => {
-                aParsed.push({
-                    name: oRoom.name,
-                    lat: oRoom.lat,
-                    lng: oRoom.lng,
-                    uuid: oRoom.uuid
-                })
+            oRoomPlayers.forEach(sPlayer => {
+                if(oActiveUsers.hasOwnProperty(sPlayer)){
+                    let oSocket = oActiveUsers[sPlayer].socket;
+                    oSocket.emit('player-connected', ownUuid);
+                }
             });
+        }
+        else{
+            roomGameMdl.findOne({uuid:oData.roomUuid})
+            .then(mRoom => {
+                if(mRoom != null){
+                    oActiveRooms[oData.roomUuid] = {
+                        name: mRoom.name,
+                        players: [oData.myUuid]
+                    };
 
-            socket.emit('rooms-list', aParsed);
-        });
-    });
-
-    /*socket.on('changeStatus', function(bStatus){
-        if(oUsers.hasOwnProperty(ownUuid)){
-            oUsers[ownUuid].inCoffee = bStatus;
-            socket.broadcast.emit('statusChanged', {
-                uuid: ownUuid,
-                inCoffee: bStatus
+                    socket.emit('full-players-list', oActiveRooms[oData.roomUuid].players);
+                }
             })
         }
     });
-
-    socket.on('msgToAll', function(msg){
-        if(oUsers.hasOwnProperty(ownUuid)){
-            socket.broadcast.emit('msgBroadcast', {
-                userName: oUsers[ownUuid].name,
-                msg: msg
-            })
-        }
-    })*/
 });
 
 server.listen(port);

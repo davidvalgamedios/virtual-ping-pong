@@ -7,6 +7,7 @@ import { RouterModule }     from '@angular/router';
 import { AppComponent }     from './app.component';
 import { AgmCoreModule } from 'angular2-google-maps/core';
 import {GameLocationComponent} from "./game-location.component";
+import {WaitingRoomComponent} from "./waiting-room.component";
 
 
 @NgModule({
@@ -24,7 +25,7 @@ import {GameLocationComponent} from "./game-location.component";
             },
             {
                 path: 'sala-de-espera/:uuid',
-                component: GameLocationComponent
+                component: WaitingRoomComponent
             },
             {
                 path: 'juego',
@@ -37,7 +38,7 @@ import {GameLocationComponent} from "./game-location.component";
             }
         ])
     ],
-    declarations: [ AppComponent, GameLocationComponent],
+    declarations: [ AppComponent, GameLocationComponent, WaitingRoomComponent],
     bootstrap:    [ AppComponent ]
 })
 export class AppModule {}

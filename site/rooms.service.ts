@@ -3,31 +3,52 @@ import * as io from 'socket.io-client';
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { UUID } from 'angular2-uuid';
+import 'rxjs/add/operator/toPromise';
 
 @Injectable()
 export class RoomsService {
-    private url = '/';
+    private socketUrl = '/';
     private userName:string = 'Valero';
-    private uuid:string;
+    private myUuid:string;
     private socket;
-    private playingStatus:boolean = false;
 
     private myPos;
 
     private roomsList = [];
+    private actualRoomData = {};
     private playersList = [];
 
-    constructor(){
-        this.socket = io(this.url);
+    constructor(private http:Http){
         let savedUuid = localStorage.getItem('savedUuid');
         if(savedUuid){
-            this.uuid = savedUuid;
+            this.myUuid = savedUuid;
         }
         else{
-            this.uuid = UUID.UUID();
-            localStorage.setItem('savedUuid', this.uuid);
+            this.myUuid = UUID.UUID();
+            localStorage.setItem('savedUuid', this.myUuid);
         }
 
+        /*navigator.geolocation.getCurrentPosition(oLoc => {
+         this.myPos = {
+         lat: oLoc.coords.latitude,
+         lng: oLoc.coords.longitude
+         }
+         });*/
+        this.myPos = {
+            lat: 39.484842199999996,
+            lng: -0.3601954
+        };
+        this.updateNearRooms();
+
+        /*this.http.post('/api/register', {
+            name: this.userName,
+            uuid: this.uuid
+        }).toPromise()
+            .then(res => {
+
+            });
+
+        this.socket = io(this.socketUrl);
         this.socket.on('rooms-list', oData => {
             oData.forEach(oRoom => {
                 this.roomsList.push({
@@ -46,19 +67,34 @@ export class RoomsService {
         this.socket.emit('register', {
             name: this.userName,
             uuid: this.uuid
-        });
-    }
-
-    setCurrentPos(newPos){
-        this.myPos = newPos;
+        });*/
     }
 
     getCurrentPos(){
         return this.myPos;
     }
 
+    updateNearRooms(){
+        this.http.post('/api/getRooms', {
+            lat: this.myPos.lat,
+            lng: this.myPos.lng
+        }).toPromise()
+            .then(oRes => {
+                this.roomsList = oRes.json()
+            });
+    }
+
     getRoomsList() {
         return this.roomsList;
+    }
+
+    getPlayersList(){
+        return this.playersList;
+    }
+
+    exitRoom(){
+        this.socket.disconnect();
+        this.socket = null;
     }
 
     createRoom(){
@@ -70,8 +106,43 @@ export class RoomsService {
     }
 
     joinRoom(uuid){
-        this.playingStatus = true;
-        this.socket.emit('joinRoom', uuid);
+        this.playersList = [];
+        this.roomsList.forEach(oRoom => {
+            if(oRoom.uuid == uuid){
+                this.actualRoomData = oRoom;
+            }
+        });
+
+        this.socket = io(this.socketUrl);
+        this.socket.emit('joinRoom', {
+            myName: this.userName,
+            myUuid: this.myUuid,
+            roomUuid: uuid
+        });
+
+        this.socket.on('full-players-list', oData => {
+            this.playersList = oData;
+        });
+
+        this.socket.on('player-disconnected', sPlayerId =>{
+            let nIndex = this.playersList.indexOf(sPlayerId);
+            if(nIndex != -1){
+                this.playersList.splice(nIndex, 1);
+            }
+        });
+
+        this.socket.on('player-connected', sPlayerId =>{
+            let nIndex = this.playersList.indexOf(sPlayerId);
+            if(nIndex == -1){
+                this.playersList.push(sPlayerId);
+            }
+        });
+    }
+
+    getRoomData(sDataId){
+        if(this.actualRoomData.hasOwnProperty(sDataId)){
+            return this.actualRoomData[sDataId];
+        }
     }
 
     register(userName){
