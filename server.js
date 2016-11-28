@@ -87,6 +87,21 @@ app.post('/api/getRooms', function(req, res){
     });
 });
 
+app.post('/api/createRoom', function(req, res){
+    let sNewRoomId = uuid();
+
+    let newRoom = new roomGameMdl();
+    newRoom.name = req.body.roomName;
+    newRoom.lat = req.body.lat;
+    newRoom.lng = req.body.lng;
+    newRoom.uuid = sNewRoomId;
+    newRoom.save();
+
+    res.send({
+        newUuid: sNewRoomId
+    });
+});
+
 io.on('connection', function (socket) {
     var ownUuid = null;
 
@@ -110,15 +125,6 @@ io.on('connection', function (socket) {
                 uuid: ownUuid
             });*/
         }
-    });
-
-    socket.on('createRoom', function(oData){
-        var newRoom = new roomGameMdl();
-        newRoom.name = oData.name;
-        newRoom.lat = oData.lat;
-        newRoom.lng = oData.lng;
-        newRoom.uuid = uuid();
-        newRoom.save();
     });
 
     socket.on('joinRoom', function(oData){

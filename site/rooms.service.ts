@@ -34,17 +34,17 @@ export class RoomsService {
             localStorage.setItem('savedUuid', this.myUuid);
         }
 
-        /*navigator.geolocation.getCurrentPosition(oLoc => {
-         this.myPos = {
-         lat: oLoc.coords.latitude,
-         lng: oLoc.coords.longitude
-         }
-         });*/
-        this.myPos = {
+        navigator.geolocation.getCurrentPosition(oLoc => {
+             this.myPos = {
+                 lat: oLoc.coords.latitude,
+                 lng: oLoc.coords.longitude
+             };
+            this.updateNearRooms();
+         });
+        /*this.myPos = {
             lat: 39.484842199999996,
             lng: -0.3601954
-        };
-        this.updateNearRooms();
+        };*/
 
         return RoomsService.instance = RoomsService.instance || this;
     }
@@ -77,11 +77,19 @@ export class RoomsService {
     }
 
     createRoom(){
-        this.socket.emit('createRoom', {
-            name: 'Test',
+        this.http.post('/api/createRoom', {
             lat: this.myPos.lat,
-            lng: this.myPos.lng
-        })
+            lng: this.myPos.lng,
+            roomName: 'TestRoom'
+        }).toPromise()
+        .then(oRes => {
+            this.roomsList.push({
+                lat: this.myPos.lat,
+                lng: this.myPos.lng,
+                name: 'TestRoom',
+                uuid: oRes.json().newUuid
+            });
+        });
     }
 
     joinRoom(uuid){
